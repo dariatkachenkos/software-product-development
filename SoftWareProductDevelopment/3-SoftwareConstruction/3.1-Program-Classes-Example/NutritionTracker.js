@@ -1,79 +1,125 @@
-class FoodEntry {
-    constructor(id, foodItem, quantityG) {
+class NutritionEntry {
+    constructor(id, dailyLogId, foodName, calories, mealTime) {
         this.id = id;
-        this.foodItem = foodItem;
-        this.quantityG = quantityG;
-        this.addedAt = new Date();
+        this.dailyLogId = dailyLogId;
+        this.foodName = foodName;
+        this.calories = calories;
+        this.mealTime = mealTime;
     }
 
-    calculateCalories() {
-        return (this.foodItem.caloriesPer100g * this.quantityG) / 100;
+    getCalories() {
+        return this.calories || 0;
+    }
+
+    isValid() {
+        const forbidden = /[<>{}\[\]]/;
+        return this.foodName && this.foodName.trim().length >= 2 && !forbidden.test(this.foodName);
     }
 }
 
-class DailyIntake {
-    constructor(id, musicianId, intakeDate) {
+class DailyLog {
+    constructor(id, personId, logDate) {
         this.id = id;
-        this.musicianId = musicianId;
-        this.intakeDate = intakeDate;
+        this.personId = personId;
+        this.logDate = logDate;
+        this.sleepHours = null;
+        this.energyLevel = null;
+        this.mood = null;
+        this.stressLevel = null;
         this.entries = [];
     }
 
-    addEntry(entry) {
+    addNutritionEntry(entry) {
         this.entries.push(entry);
     }
 
-    removeEntry(entryId) {
+    removeNutritionEntry(entryId) {
         this.entries = this.entries.filter(e => e.id !== entryId);
     }
 
-    calculateTotalCalories() {
-        return this.entries.reduce((sum, entry) => sum + entry.calculateCalories(), 0);
+    getTotalCalories() {
+        return this.entries.reduce((sum, entry) => sum + entry.getCalories(), 0);
     }
 }
 
-class NutritionTracker {
+class CreativeFlowTracker {
     constructor(pool) {
         this.pool = pool;
     }
 
-    async getDailyCalories(musicianId, date) {
-        if (!date) throw new Error('InvalidDateError: date is required');
+    async getAverageQuality(personId, from, to) {
+        if (!from || !to) throw new Error('InvalidDateError: from and to are required');
 
         const result = await this.pool.query(
-            `SELECT COALESCE(SUM(fe.quantity_g * fi.calories_per_100g / 100), 0) AS total_calories
-             FROM daily_intake di
-             JOIN food_entry fe ON fe.daily_intake_id = di.id
-             JOIN food_item fi ON fi.id = fe.food_item_id
-             WHERE di.musician_id = $1 AND di.intake_date = $2`,
-            [musicianId, date]
+            `SELECT COALESCE(AVG(quality_rating), 0) AS avg_quality
+             FROM creative_session
+             WHERE person_id = $1
+               AND session_date BETWEEN $2 AND $3`,
+            [personId, from, to]
         );
-        return parseFloat(result.rows[0].total_calories);
+        return parseFloat(result.rows[0].avg_quality);
     }
 
-    async compareWithDailyNorms(musicianId, date) {
-        const calories = await this.getDailyCalories(musicianId, date);
-        const DAILY_NORM_KCAL = 2000;
-        return {
-            current: calories,
-            norm: DAILY_NORM_KCAL,
-            difference: calories - DAILY_NORM_KCAL,
-            status: calories >= DAILY_NORM_KCAL ? 'норма' : 'недостатньо'
-        };
+    async computeCorrelations(personId, days = 30) {
+        const result = await this.pool.query(
+            `SELECT
+                CORR(dl.sleep_hours, cs.quality_rating)  AS sleep_corr,
+                CORR(dl.energy_level, cs.quality_rating) AS energy_corr,
+                CORR(dl.mood, cs.quality_rating)         AS mood_corr,
+                CORR(dl.stress_level, cs.quality_rating) AS stress_corr
+             FROM creative_session cs
+             JOIN daily_log dl ON dl.person_id = cs.person_id
+                               AND dl.log_date = cs.session_date
+             WHERE cs.person_id = $1
+               AND cs.session_date >= CURRENT_DATE - $2::int`,
+            [personId, days]
+        );
+
+        const row = result.rows[0];
+        const insights = [];
+        const factors = [
+            { key: 'sleep_corr',  type: 'sleep',  label: 'годин сну' },
+            { key: 'energy_corr', type: 'energy', label: 'рівня енергії' },
+            { key: 'mood_corr',   type: 'mood',   label: 'настрою' },
+            { key: 'stress_corr', type: 'stress', label: 'рівня стресу' },
+        ];
+
+        for (const f of factors) {
+            const score = parseFloat(row[f.key]);
+            if (!isNaN(score) && Math.abs(score) >= 0.3) {
+                const direction = score > 0 ? 'позитивно' : 'негативно';
+                insights.push({
+                    insightType: f.type,
+                    description: `${f.label} ${direction} корелює з якістю творчих сесій (r = ${score.toFixed(2)})`,
+                    correlationScore: score,
+                });
+            }
+        }
+        return insights;
     }
 
-    async generateRecommendations(musicianId, date) {
-        const comparison = await this.compareWithDailyNorms(musicianId, date);
+    async generateRecommendations(personId) {
+        const insights = await this.computeCorrelations(personId, 30);
         const recommendations = [];
 
-        if (comparison.difference < -500) {
-            recommendations.push({
-                nutrientType: 'calories',
-                text: `Ваш раціон містить на ${Math.abs(comparison.difference).toFixed(0)} ккал менше за норму. Додайте горіхи, авокадо або бобові.`
-            });
+        for (const insight of insights) {
+            if (insight.insightType === 'sleep' && insight.correlationScore > 0.5) {
+                recommendations.push({
+                    category: 'sleep',
+                    text: 'Ваші найкращі творчі сесії трапляються після достатнього сну. Спробуйте дотримуватися стабільного режиму сну 7–9 годин.',
+                    basedOnDays: 30,
+                });
+            }
+            if (insight.insightType === 'stress' && insight.correlationScore < -0.4) {
+                recommendations.push({
+                    category: 'general',
+                    text: 'Рівень стресу негативно впливає на вашу творчість. Розгляньте медитацію або прогулянки перед творчою сесією.',
+                    basedOnDays: 30,
+                });
+            }
         }
         return recommendations;
     }
 }
 
-module.exports = { NutritionTracker, DailyIntake, FoodEntry };
+module.exports = { CreativeFlowTracker, DailyLog, NutritionEntry };
