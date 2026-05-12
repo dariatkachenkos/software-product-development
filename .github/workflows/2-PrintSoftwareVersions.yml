@@ -1,0 +1,18 @@
+name: 2 - Print Software Versions
+on:
+  push:
+    branches: [laboratory-work-4]
+jobs:
+  PrintVersions:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Print OS version
+        run: uname -a
+      - name: Print Node.js version
+        run: node --version
+      - name: Print npm version
+        run: npm --version
+      - name: Print Git version
+        run: git --version
+      - name: Print PostgreSQL client version
+        run: psql --version

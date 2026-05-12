@@ -1,0 +1,25 @@
+@startuml
+
+title UML-діаграма розгортання — MusicHealth
+
+node "Клієнтський пристрій\n(ПК / смартфон)" as Client {
+    component "Браузер\n(Chrome / Firefox / Edge)" as Browser
+    component "HTML5 / CSS3 / JavaScript\n(SPA)" as Frontend
+    Browser --> Frontend
+}
+
+node "Веб-сервер\n(Ubuntu Server 22.04)" as WebServer {
+    component "Node.js v20\n+ Express.js" as NodeApp
+    component "REST API\n(порт 3000)" as API
+    NodeApp --> API
+}
+
+node "База даних\n(Ubuntu Server 22.04)" as DBServer {
+    database "PostgreSQL 15\n(порт 5432)" as DB
+}
+
+Frontend --> API : HTTP/JSON (передача даних)
+API --> DB : SQL (передача управління)
+DB --> API : ResultSet (передача даних)
+
+@enduml

@@ -1,0 +1,106 @@
+@startuml
+
+hide circle
+left to right direction
+title UML-діаграма прототипу програмних класів — MusicHealth (JavaScript)
+
+class Musician {
+    -id: number
+    -firstName: string
+    -lastName: string
+    -email: string
+    -passwordHash: string
+    -birthDate: Date
+    -weight: number
+    -height: number
+    -dailyIntakes: DailyIntake[]
+    -healthMetrics: HealthMetric[]
+    -recommendations: Recommendation[]
+    +getId(): number
+    +getEmail(): string
+    +getWeight(): number
+    +setWeight(weight: number): void
+    +calculateBMI(): number
+    +addFoodEntry(intakeId: number, foodItem: FoodItem, quantityG: number): FoodEntry
+    +recordHealthMetric(type: string, value: number): HealthMetric
+    +getRecommendations(): Recommendation[]
+}
+
+class DailyIntake {
+    -id: number
+    -musicianId: number
+    -intakeDate: Date
+    -entries: FoodEntry[]
+    +getId(): number
+    +getIntakeDate(): Date
+    +getEntries(): FoodEntry[]
+    +addEntry(entry: FoodEntry): void
+    +removeEntry(entryId: number): void
+    +calculateTotalCalories(): number
+}
+
+class FoodItem {
+    -id: number
+    -name: string
+    -caloriesPer100g: number
+    -proteinsPer100g: number
+    -fatsPer100g: number
+    -carbsPer100g: number
+    +getId(): number
+    +getName(): string
+    +getCaloriesPer100g(): number
+    +getNutritionalInfo(): object
+}
+
+class FoodEntry {
+    -id: number
+    -dailyIntakeId: number
+    -foodItem: FoodItem
+    -quantityG: number
+    -addedAt: Date
+    +getId(): number
+    +getFoodItem(): FoodItem
+    +getQuantityG(): number
+    +calculateCalories(): number
+}
+
+class HealthMetric {
+    -id: number
+    -musicianId: number
+    -metricType: string
+    -value: number
+    -measureDate: Date
+    +getId(): number
+    +getMetricType(): string
+    +getValue(): number
+    +getMeasureDate(): Date
+}
+
+class Recommendation {
+    -id: number
+    -musicianId: number
+    -text: string
+    -generatedAt: Date
+    -nutrientType: string
+    +getId(): number
+    +getText(): string
+    +getNutrientType(): string
+}
+
+class NutritionTracker {
+    -musician: Musician
+    +logFoodEntry(foodItem: FoodItem, quantityG: number, date: Date): FoodEntry
+    +getDailyCalories(date: Date): number
+    +compareWithDailyNorms(date: Date): object
+    +generateRecommendations(date: Date): Recommendation[]
+    +getMissingNutrients(date: Date): string[]
+}
+
+Musician "1" o-- "+" DailyIntake : dailyIntakes
+Musician "1" o-- "+" HealthMetric : healthMetrics
+Musician "1" o-- "+" Recommendation : recommendations
+DailyIntake "1" o-- "+" FoodEntry : entries
+FoodEntry "+" --> "1" FoodItem : foodItem
+NutritionTracker --> Musician : musician
+
+@enduml

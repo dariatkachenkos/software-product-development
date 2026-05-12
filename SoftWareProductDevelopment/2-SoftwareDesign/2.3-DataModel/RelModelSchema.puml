@@ -1,0 +1,67 @@
+@startuml
+
+title Реляційна схема БД — MusicHealth
+
+entity "musician" {
+    * id : SERIAL <<PK>>
+    --
+    * first_name : VARCHAR(50)
+    * last_name : VARCHAR(50)
+    * email : VARCHAR(100) <<UNIQUE>>
+    * password_hash : VARCHAR(255)
+    * birth_date : DATE
+    weight : DECIMAL(5,1)
+    height : INTEGER
+}
+
+entity "food_item" {
+    * id : SERIAL <<PK>>
+    --
+    * name : VARCHAR(100) <<UNIQUE>>
+    * calories_per_100g : DECIMAL(6,2)
+    * proteins_per_100g : DECIMAL(5,2)
+    * fats_per_100g : DECIMAL(5,2)
+    * carbs_per_100g : DECIMAL(5,2)
+}
+
+entity "daily_intake" {
+    * id : SERIAL <<PK>>
+    --
+    * musician_id : INTEGER <<FK>>
+    * intake_date : DATE
+}
+
+entity "food_entry" {
+    * id : SERIAL <<PK>>
+    --
+    * daily_intake_id : INTEGER <<FK>>
+    * food_item_id : INTEGER <<FK>>
+    * quantity_g : DECIMAL(6,1)
+    * added_at : TIMESTAMP
+}
+
+entity "health_metric" {
+    * id : SERIAL <<PK>>
+    --
+    * musician_id : INTEGER <<FK>>
+    * metric_type : VARCHAR(30)
+    * value : DECIMAL(6,2)
+    * measure_date : DATE
+}
+
+entity "recommendation" {
+    * id : SERIAL <<PK>>
+    --
+    * musician_id : INTEGER <<FK>>
+    * text : TEXT
+    * generated_at : TIMESTAMP
+    * nutrient_type : VARCHAR(30)
+}
+
+musician ||--o{ daily_intake : "веде"
+daily_intake ||--o{ food_entry : "містить"
+food_item ||--o{ food_entry : "входить до"
+musician ||--o{ health_metric : "фіксує"
+musician ||--o{ recommendation : "отримує"
+
+@enduml

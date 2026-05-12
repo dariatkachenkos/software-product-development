@@ -1,0 +1,35 @@
+@startuml
+
+title Діаграма прецедентів — MusicHealth
+
+left to right direction
+
+actor "Музикант" as Musician
+actor "Система\nсповіщень" as NotifSystem
+
+rectangle MusicHealth {
+    usecase "UC1: Авторизуватися\nв системі" as UC1
+    usecase "UC2: Записати\nраціон харчування" as UC2
+    usecase "UC3: Переглянути рекомендації\nщодо харчування" as UC3
+    usecase "UC4: Відстежити\nфізичні показники" as UC4
+    usecase "UC5: Встановити\nнагадування" as UC5
+    usecase "UC6: Переглянути\nстатистику здоров'я" as UC6
+    usecase "UC7: Додати продукт\nхарчування" as UC7
+    usecase "UC8: Розрахувати\nкалорійність раціону" as UC8
+}
+
+Musician --> UC1
+Musician --> UC2
+Musician --> UC3
+Musician --> UC4
+Musician --> UC5
+Musician --> UC6
+
+UC2 ..> UC7 : include
+UC2 ..> UC8 : include
+UC3 ..> UC8 : include
+
+UC5 ..> UC1 : extend
+NotifSystem --> UC5
+
+@enduml
