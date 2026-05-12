@@ -12,8 +12,8 @@
 
 **Context:**
 - Мова програмування: JavaScript
-- Класи: Musician, DailyIntake, FoodItem, FoodEntry, HealthMetric, Recommendation, NutritionTracker
-- Методи повинні відповідати FR1.1–FR2.3
+- Класи: CreativePerson, CreativeSession, DailyLog, NutritionEntry, Insight, Recommendation, CreativeFlowTracker
+- Методи повинні відповідати FR1.1–FR3.3
 
 **Format:**
 - UML-діаграму опиши мовою розмітки PlantUML.

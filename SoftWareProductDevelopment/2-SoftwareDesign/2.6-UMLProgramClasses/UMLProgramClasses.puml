@@ -2,105 +2,104 @@
 
 hide circle
 left to right direction
-title UML-діаграма прототипу програмних класів — MusicHealth (JavaScript)
+title UML-діаграма прототипу програмних класів — CreativeFlow (JavaScript)
 
-class Musician {
-    -id: number
-    -firstName: string
-    -lastName: string
-    -email: string
-    -passwordHash: string
-    -birthDate: Date
-    -weight: number
-    -height: number
-    -dailyIntakes: DailyIntake[]
-    -healthMetrics: HealthMetric[]
-    -recommendations: Recommendation[]
-    +getId(): number
-    +getEmail(): string
-    +getWeight(): number
-    +setWeight(weight: number): void
-    +calculateBMI(): number
-    +addFoodEntry(intakeId: number, foodItem: FoodItem, quantityG: number): FoodEntry
-    +recordHealthMetric(type: string, value: number): HealthMetric
-    +getRecommendations(): Recommendation[]
-}
-
-class DailyIntake {
-    -id: number
-    -musicianId: number
-    -intakeDate: Date
-    -entries: FoodEntry[]
-    +getId(): number
-    +getIntakeDate(): Date
-    +getEntries(): FoodEntry[]
-    +addEntry(entry: FoodEntry): void
-    +removeEntry(entryId: number): void
-    +calculateTotalCalories(): number
-}
-
-class FoodItem {
+class CreativePerson {
     -id: number
     -name: string
-    -caloriesPer100g: number
-    -proteinsPer100g: number
-    -fatsPer100g: number
-    -carbsPer100g: number
+    -email: string
+    -creativeType: string
+    -createdAt: Date
     +getId(): number
     +getName(): string
-    +getCaloriesPer100g(): number
-    +getNutritionalInfo(): object
+    +getEmail(): string
+    +getCreativeType(): string
 }
 
-class FoodEntry {
+class CreativeSession {
     -id: number
-    -dailyIntakeId: number
-    -foodItem: FoodItem
-    -quantityG: number
-    -addedAt: Date
+    -personId: number
+    -sessionDate: Date
+    -durationMin: number
+    -creativeType: string
+    -title: string
+    -qualityRating: number
+    -energyBefore: number
+    -notes: string
+    -createdAt: Date
     +getId(): number
-    +getFoodItem(): FoodItem
-    +getQuantityG(): number
-    +calculateCalories(): number
+    +getQualityRating(): number
+    +getDurationMin(): number
+    +isHighQuality(): boolean
 }
 
-class HealthMetric {
+class DailyLog {
     -id: number
-    -musicianId: number
-    -metricType: string
-    -value: number
-    -measureDate: Date
+    -personId: number
+    -logDate: Date
+    -sleepHours: number
+    -energyLevel: number
+    -mood: number
+    -stressLevel: number
+    -entries: NutritionEntry[]
     +getId(): number
-    +getMetricType(): string
-    +getValue(): number
-    +getMeasureDate(): Date
+    +getLogDate(): Date
+    +addNutritionEntry(entry: NutritionEntry): void
+    +removeNutritionEntry(entryId: number): void
+    +getTotalCalories(): number
+}
+
+class NutritionEntry {
+    -id: number
+    -dailyLogId: number
+    -foodName: string
+    -calories: number
+    -mealTime: string
+    +getId(): number
+    +getFoodName(): string
+    +getCalories(): number
+    +isValid(): boolean
+}
+
+class Insight {
+    -id: number
+    -personId: number
+    -insightType: string
+    -description: string
+    -correlationScore: number
+    -generatedAt: Date
+    +getId(): number
+    +getDescription(): string
+    +getCorrelationScore(): number
+    +isPositiveCorrelation(): boolean
 }
 
 class Recommendation {
     -id: number
-    -musicianId: number
+    -personId: number
+    -category: string
     -text: string
-    -generatedAt: Date
-    -nutrientType: string
+    -basedOnDays: number
+    -createdAt: Date
     +getId(): number
     +getText(): string
-    +getNutrientType(): string
+    +getCategory(): string
 }
 
-class NutritionTracker {
-    -musician: Musician
-    +logFoodEntry(foodItem: FoodItem, quantityG: number, date: Date): FoodEntry
-    +getDailyCalories(date: Date): number
-    +compareWithDailyNorms(date: Date): object
-    +generateRecommendations(date: Date): Recommendation[]
-    +getMissingNutrients(date: Date): string[]
+class CreativeFlowTracker {
+    -pool: Pool
+    +constructor(pool: Pool)
+    +getAverageQuality(personId: number, from: Date, to: Date): Promise<number>
+    +computeCorrelations(personId: number, days: number): Promise<Insight[]>
+    +generateRecommendations(personId: number): Promise<Recommendation[]>
+    +getDailyLog(personId: number, date: Date): Promise<DailyLog>
 }
 
-Musician "1" o-- "+" DailyIntake : dailyIntakes
-Musician "1" o-- "+" HealthMetric : healthMetrics
-Musician "1" o-- "+" Recommendation : recommendations
-DailyIntake "1" o-- "+" FoodEntry : entries
-FoodEntry "+" --> "1" FoodItem : foodItem
-NutritionTracker --> Musician : musician
+CreativePerson "1" o-- "+" CreativeSession : sessions
+CreativePerson "1" o-- "+" DailyLog : logs
+DailyLog "1" o-- "+" NutritionEntry : entries
+CreativePerson "1" o-- "+" Insight : insights
+CreativePerson "1" o-- "+" Recommendation : recommendations
+CreativeFlowTracker --> CreativePerson : person
 
 @enduml
