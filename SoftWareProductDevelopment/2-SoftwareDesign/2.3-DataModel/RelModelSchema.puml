@@ -1,0 +1,75 @@
+@startuml
+
+title Реляційна схема БД — CreativeFlow
+
+entity "creative_person" {
+    * id : SERIAL <<PK>>
+    --
+    * name : VARCHAR(100)
+    * email : VARCHAR(255) <<UNIQUE>>
+    * creative_type : VARCHAR(50)
+    * created_at : TIMESTAMP
+}
+
+entity "creative_session" {
+    * id : SERIAL <<PK>>
+    --
+    * person_id : INTEGER <<FK>>
+    * session_date : DATE
+    * duration_min : INTEGER
+    * creative_type : VARCHAR(50)
+    title : VARCHAR(200)
+    * quality_rating : INTEGER
+    energy_before : INTEGER
+    notes : TEXT
+    * created_at : TIMESTAMP
+}
+
+entity "daily_log" {
+    * id : SERIAL <<PK>>
+    --
+    * person_id : INTEGER <<FK>>
+    * log_date : DATE
+    sleep_hours : NUMERIC(4,1)
+    energy_level : INTEGER
+    mood : INTEGER
+    stress_level : INTEGER
+    notes : TEXT
+}
+
+entity "nutrition_entry" {
+    * id : SERIAL <<PK>>
+    --
+    * daily_log_id : INTEGER <<FK>>
+    * food_name : VARCHAR(200)
+    calories : INTEGER
+    meal_time : VARCHAR(20)
+}
+
+entity "insight" {
+    * id : SERIAL <<PK>>
+    --
+    * person_id : INTEGER <<FK>>
+    * generated_at : TIMESTAMP
+    * insight_type : VARCHAR(50)
+    * description : TEXT
+    correlation_score : NUMERIC(4,3)
+}
+
+entity "recommendation" {
+    * id : SERIAL <<PK>>
+    --
+    * person_id : INTEGER <<FK>>
+    * created_at : TIMESTAMP
+    * category : VARCHAR(50)
+    * text : TEXT
+    based_on_days : INTEGER
+}
+
+creative_person ||--o{ creative_session : "проводить"
+creative_person ||--o{ daily_log : "веде"
+daily_log ||--o{ nutrition_entry : "містить"
+creative_person ||--o{ insight : "отримує"
+creative_person ||--o{ recommendation : "отримує"
+
+@enduml

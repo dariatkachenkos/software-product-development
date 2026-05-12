@@ -1,0 +1,16 @@
+name: 3 - SQL Linter
+on:
+  push:
+    branches: [laboratory-work-4]
+jobs:
+  SQLLint:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+      - name: Install sqlfluff
+        run: pip install sqlfluff
+      - name: Run SQL linter
+        run: |
+          find . -name "*.sql" -exec echo "Linting: {}" \; -exec sqlfluff lint {} \;
+        continue-on-error: true

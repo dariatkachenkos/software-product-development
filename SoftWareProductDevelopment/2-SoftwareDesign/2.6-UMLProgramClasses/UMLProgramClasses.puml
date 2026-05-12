@@ -1,0 +1,105 @@
+@startuml
+
+hide circle
+left to right direction
+title UML-діаграма прототипу програмних класів — CreativeFlow (JavaScript)
+
+class CreativePerson {
+    -id: number
+    -name: string
+    -email: string
+    -creativeType: string
+    -createdAt: Date
+    +getId(): number
+    +getName(): string
+    +getEmail(): string
+    +getCreativeType(): string
+}
+
+class CreativeSession {
+    -id: number
+    -personId: number
+    -sessionDate: Date
+    -durationMin: number
+    -creativeType: string
+    -title: string
+    -qualityRating: number
+    -energyBefore: number
+    -notes: string
+    -createdAt: Date
+    +getId(): number
+    +getQualityRating(): number
+    +getDurationMin(): number
+    +isHighQuality(): boolean
+}
+
+class DailyLog {
+    -id: number
+    -personId: number
+    -logDate: Date
+    -sleepHours: number
+    -energyLevel: number
+    -mood: number
+    -stressLevel: number
+    -entries: NutritionEntry[]
+    +getId(): number
+    +getLogDate(): Date
+    +addNutritionEntry(entry: NutritionEntry): void
+    +removeNutritionEntry(entryId: number): void
+    +getTotalCalories(): number
+}
+
+class NutritionEntry {
+    -id: number
+    -dailyLogId: number
+    -foodName: string
+    -calories: number
+    -mealTime: string
+    +getId(): number
+    +getFoodName(): string
+    +getCalories(): number
+    +isValid(): boolean
+}
+
+class Insight {
+    -id: number
+    -personId: number
+    -insightType: string
+    -description: string
+    -correlationScore: number
+    -generatedAt: Date
+    +getId(): number
+    +getDescription(): string
+    +getCorrelationScore(): number
+    +isPositiveCorrelation(): boolean
+}
+
+class Recommendation {
+    -id: number
+    -personId: number
+    -category: string
+    -text: string
+    -basedOnDays: number
+    -createdAt: Date
+    +getId(): number
+    +getText(): string
+    +getCategory(): string
+}
+
+class CreativeFlowTracker {
+    -pool: Pool
+    +constructor(pool: Pool)
+    +getAverageQuality(personId: number, from: Date, to: Date): Promise<number>
+    +computeCorrelations(personId: number, days: number): Promise<Insight[]>
+    +generateRecommendations(personId: number): Promise<Recommendation[]>
+    +getDailyLog(personId: number, date: Date): Promise<DailyLog>
+}
+
+CreativePerson "1" o-- "+" CreativeSession : sessions
+CreativePerson "1" o-- "+" DailyLog : logs
+DailyLog "1" o-- "+" NutritionEntry : entries
+CreativePerson "1" o-- "+" Insight : insights
+CreativePerson "1" o-- "+" Recommendation : recommendations
+CreativeFlowTracker --> CreativePerson : person
+
+@enduml
