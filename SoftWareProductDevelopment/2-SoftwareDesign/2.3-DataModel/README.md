@@ -7,55 +7,67 @@
 ## SQL-скрипт ініціалізації БД
 
 ```sql
-CREATE TABLE musician (
-    id SERIAL PRIMARY KEY,
-    first_name VARCHAR(50) NOT NULL CHECK (LENGTH(first_name) >= 2),
-    last_name VARCHAR(50) NOT NULL CHECK (LENGTH(last_name) >= 2),
-    email VARCHAR(100) NOT NULL UNIQUE CHECK (email ~* '^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$'),
-    password_hash VARCHAR(255) NOT NULL,
-    birth_date DATE NOT NULL CHECK (birth_date <= CURRENT_DATE),
-    weight DECIMAL(5,1) CHECK (weight > 0 AND weight <= 300),
-    height INTEGER CHECK (height > 0 AND height <= 300)
+CREATE TABLE creative_person (
+    id            SERIAL PRIMARY KEY,
+    name          VARCHAR(100) NOT NULL CHECK (LENGTH(TRIM(name)) >= 2),
+    email         VARCHAR(255) UNIQUE NOT NULL
+                      CHECK (email ~* '^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}$'),
+    creative_type VARCHAR(50) NOT NULL
+                      CHECK (creative_type IN ('musician','writer','artist','designer','other')),
+    created_at    TIMESTAMP DEFAULT NOW()
 );
 
-CREATE TABLE food_item (
-    id SERIAL PRIMARY KEY,
-    name VARCHAR(100) NOT NULL UNIQUE
-        CHECK (LENGTH(name) >= 2 AND name !~ '[<>{}[\]]'),
-    calories_per_100g DECIMAL(6,2) NOT NULL CHECK (calories_per_100g >= 0),
-    proteins_per_100g DECIMAL(5,2) NOT NULL CHECK (proteins_per_100g >= 0),
-    fats_per_100g DECIMAL(5,2) NOT NULL CHECK (fats_per_100g >= 0),
-    carbs_per_100g DECIMAL(5,2) NOT NULL CHECK (carbs_per_100g >= 0)
+CREATE TABLE creative_session (
+    id             SERIAL PRIMARY KEY,
+    person_id      INTEGER NOT NULL REFERENCES creative_person(id) ON DELETE CASCADE,
+    session_date   DATE NOT NULL,
+    duration_min   INTEGER NOT NULL CHECK (duration_min > 0 AND duration_min <= 1440),
+    creative_type  VARCHAR(50) NOT NULL,
+    title          VARCHAR(200),
+    quality_rating INTEGER NOT NULL CHECK (quality_rating BETWEEN 1 AND 10),
+    energy_before  INTEGER CHECK (energy_before BETWEEN 1 AND 10),
+    notes          TEXT,
+    created_at     TIMESTAMP DEFAULT NOW()
 );
 
-CREATE TABLE daily_intake (
-    id SERIAL PRIMARY KEY,
-    musician_id INTEGER NOT NULL REFERENCES musician(id) ON DELETE CASCADE,
-    intake_date DATE NOT NULL CHECK (intake_date <= CURRENT_DATE),
-    UNIQUE (musician_id, intake_date)
+CREATE TABLE daily_log (
+    id            SERIAL PRIMARY KEY,
+    person_id     INTEGER NOT NULL REFERENCES creative_person(id) ON DELETE CASCADE,
+    log_date      DATE NOT NULL,
+    sleep_hours   NUMERIC(4,1) CHECK (sleep_hours BETWEEN 0 AND 24),
+    energy_level  INTEGER CHECK (energy_level BETWEEN 1 AND 10),
+    mood          INTEGER CHECK (mood BETWEEN 1 AND 10),
+    stress_level  INTEGER CHECK (stress_level BETWEEN 1 AND 10),
+    notes         TEXT,
+    UNIQUE (person_id, log_date)
 );
 
-CREATE TABLE food_entry (
-    id SERIAL PRIMARY KEY,
-    daily_intake_id INTEGER NOT NULL REFERENCES daily_intake(id) ON DELETE CASCADE,
-    food_item_id INTEGER NOT NULL REFERENCES food_item(id),
-    quantity_g DECIMAL(6,1) NOT NULL CHECK (quantity_g > 0 AND quantity_g <= 5000),
-    added_at TIMESTAMP NOT NULL DEFAULT NOW()
+CREATE TABLE nutrition_entry (
+    id           SERIAL PRIMARY KEY,
+    daily_log_id INTEGER NOT NULL REFERENCES daily_log(id) ON DELETE CASCADE,
+    food_name    VARCHAR(200) NOT NULL
+                     CHECK (LENGTH(TRIM(food_name)) >= 2
+                        AND food_name !~ '[<>{}\[\]]'),
+    calories     INTEGER CHECK (calories >= 0 AND calories <= 5000),
+    meal_time    VARCHAR(20) CHECK (meal_time IN ('breakfast','lunch','dinner','snack'))
 );
 
-CREATE TABLE health_metric (
-    id SERIAL PRIMARY KEY,
-    musician_id INTEGER NOT NULL REFERENCES musician(id) ON DELETE CASCADE,
-    metric_type VARCHAR(30) NOT NULL,
-    value DECIMAL(6,2) NOT NULL CHECK (value > 0),
-    measure_date DATE NOT NULL CHECK (measure_date <= CURRENT_DATE)
+CREATE TABLE insight (
+    id                SERIAL PRIMARY KEY,
+    person_id         INTEGER NOT NULL REFERENCES creative_person(id) ON DELETE CASCADE,
+    generated_at      TIMESTAMP DEFAULT NOW(),
+    insight_type      VARCHAR(50) NOT NULL,
+    description       TEXT NOT NULL,
+    correlation_score NUMERIC(4,3) CHECK (correlation_score BETWEEN -1 AND 1)
 );
 
 CREATE TABLE recommendation (
-    id SERIAL PRIMARY KEY,
-    musician_id INTEGER NOT NULL REFERENCES musician(id) ON DELETE CASCADE,
-    text TEXT NOT NULL,
-    generated_at TIMESTAMP NOT NULL DEFAULT NOW(),
-    nutrient_type VARCHAR(30) NOT NULL
+    id            SERIAL PRIMARY KEY,
+    person_id     INTEGER NOT NULL REFERENCES creative_person(id) ON DELETE CASCADE,
+    created_at    TIMESTAMP DEFAULT NOW(),
+    category      VARCHAR(50) NOT NULL
+                      CHECK (category IN ('sleep','nutrition','activity','schedule','general')),
+    text          TEXT NOT NULL,
+    based_on_days INTEGER DEFAULT 30 CHECK (based_on_days > 0)
 );
 ```
